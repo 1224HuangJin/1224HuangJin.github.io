@@ -3,16 +3,23 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # 或者是你的主分支名
+      - main  # 如果你的分支叫 master，这里记得改一下
 
-# 设置权限以允许部署到 GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# 确保只有一个部署任务在运行，避免冲突
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,13 +41,10 @@ jobs:
           pnpm install
           pnpm build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # Vite 构建出的目录
+          path: './dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
